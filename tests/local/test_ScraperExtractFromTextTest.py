@@ -1937,38 +1937,276 @@ class ScraperExtractFromText(unittest.TestCase):
             )
         ],
         "juriscraper.opinions.united_states.attorney_general.arkag": [
+            # https://opinionstorage.blob.core.windows.net/opinions/2012-009.pdf
             (
-                "Sincerely,\r\nTIM GRIFFIN\r\nAttorney General\r\n",
+                """
+Page 3
+
+Assistant Attorney General J. M. Barker prepared this opinion, which I approve.
+
+Sincerely,
+
+DUSTIN M&DANIEL
+Attorney General
+""",
                 {
                     "OpinionCluster": {
-                        "judges": "TIM GRIFFIN, Attorney General",
+                        "judges": "DUSTIN McDANIEL, Attorney General"
                     }
                 },
             ),
+            # https://opinionstorage.blob.core.windows.net/opinions/2013-078.pdf
             (
-                "Sincerely,\nDUSTIN McDANIEL\nAttorney General\n",
+                """Assistant Attorney General Jack Druff prepared the foregoing opinion, which |
+hereby approve.
+
+Sincerely,
+
+BRADFORD J. PHELPS
+Chief Deputy Attorney General
+""",
                 {
                     "OpinionCluster": {
-                        "judges": "DUSTIN McDANIEL, Attorney General",
+                        "judges": "BRADFORD J. PHELPS, Chief Deputy Attorney General"
                     }
                 },
             ),
+            # https://opinionstorage.blob.core.windows.net/opinions/2014-072.pdf
             (
-                "TIM GRIFFIN\nATTORNEY GENERAL\n\n"
-                "Sincerely,\nZACH MAYO\nChief Deputy Attorney General\n",
+                """your submitted popular name and ballot title may be necessary. I will be pleased
+to perform my statutory duties in this regard in a timely manner after
+resubmission.
+
+Sincerely,
+
+
+
+DUSTIN MCDANIEL
+Attorney General
+""",
                 {
                     "OpinionCluster": {
-                        "judges": "ZACH MAYO, Chief Deputy Attorney General",
+                        "judges": "DUSTIN McDANIEL, Attorney General"
                     }
                 },
             ),
+            # https://opinionstorage.blob.core.windows.net/opinions/2015-124.pdf
             (
-                "STATE OF ARKANSAS\nATTORNEY GENERAL\n\nSincerely,\n",
+                """   Constitution and of the associated penalties for violations. Enclosed herewith are
+   instructions that should be incorporated in your petition prior to circulation.
+
+   Sincerely,
+
+__;::;::>   /:f<s?
+   LESLIE RUTLEDGE
+   Attorney General
+""",
+                {
+                    "OpinionCluster": {
+                        "judges": "LESLIE RUTLEDGE, Attorney General"
+                    }
+                },
+            ),
+            # https://opinionstorage.blob.core.windows.net/opinions/2015-094.pdf
+            (
+                """Deputy Attorney General Elisabeth A. Walker prepared the foregoing opinion,
+which I hereby approve.
+
+Sincerely,
+
+
+~~
+Attorney General
+""",
                 {},
             ),
+            # https://opinionstorage.blob.core.windows.net/opinions/2016-067.pdf
             (
-                "STEVE CLARK\nATTORNEY GENERAL\n",
-                {},
+                """decide whether to provide sick leave compensation for non-classified employees
+of Arkansas Tech who were not employees of Valley Tech on June 30, 2003.
+
+Sincerely,
+
+~~ L //~7
+LESLIE RUTLEDGE
+Attorney General
+""",
+                {
+                    "OpinionCluster": {
+                        "judges": "LESLIE RUTLEDGE, Attorney General"
+                    }
+                },
+            ),
+            # https://opinionstorage.blob.core.windows.net/opinions/2017-038.pdf
+            (
+                """applicable tests to each specific record to determine whether the FOIA requires its
+public disclosure.
+
+Sincerely,
+
+ ~- ,._ . /~"fa
+LESLIE RUTLEDGE
+Attorney General
+""",
+                {
+                    "OpinionCluster": {
+                        "judges": "LESLIE RUTLEDGE, Attorney General"
+                    }
+                },
+            ),
+            # https://opinionstorage.blob.core.windows.net/opinions/2018-145.pdf
+            (
+                """blank pages but upon which redactions appear to still have been made. Obviously,
+I cannot render any opinion as to these pages.
+
+Sincerely,
+
+.?:~~:;-;~:=:>-     L.   /./?17
+LESLIE RUTLEDGE
+Attorney General
+""",
+                {
+                    "OpinionCluster": {
+                        "judges": "LESLIE RUTLEDGE, Attorney General"
+                    }
+                },
+            ),
+            # https://opinionstorage.blob.core.windows.net/opinions/2019-001.pdf
+            (
+                """ $35,000. Accordingly, a county must procure a construction manager separately
+ from a general contractor on such a county construction project.
+
+ Sincerely,
+
+~==fu :o-.
+ LESLIE RUTLEDGE
+ Attorney General
+""",
+                {
+                    "OpinionCluster": {
+                        "judges": "LESLIE RUTLEDGE, Attorney General"
+                    }
+                },
+            ),
+            # https://opinionstorage.blob.core.windows.net/opinions/2020-001.pdf
+            (
+                """this "allowable exception" is that would allow the letters to be withheld.
+However, the letters appear on their face to be disclosable.
+
+Sincerely,
+
+~~;;;>-             L.   //?>1-'fa
+LESLIE RUTLEDGE
+Attorney General
+""",
+                {
+                    "OpinionCluster": {
+                        "judges": "LESLIE RUTLEDGE, Attorney General"
+                    }
+                },
+            ),
+            # https://opinionstorage.blob.core.windows.net/opinions/2021-001.pdf
+            (
+                """Therefore, I will not repeat the opinion herein, but instead refer you to the enclosed
+Opinion 2020-063 for the analysis and conclusions.
+
+Sincerely,
+
+~~::;:>_           L.   //~17
+LESLIE RUTLEDGE
+Attorney General
+""",
+                {
+                    "OpinionCluster": {
+                        "judges": "LESLIE RUTLEDGE, Attorney General"
+                    }
+                },
+            ),
+            # https://opinionstorage.blob.core.windows.net/opinions/2022-001.pdf
+            (
+                """undertaken by a public corporation formed pursuant to the Public Corporations
+Act may be financed through that tax.
+
+Sincerely,
+
+LESLIE RUTLEDGE
+Attorney General
+""",
+                {
+                    "OpinionCluster": {
+                        "judges": "LESLIE RUTLEDGE, Attorney General"
+                    }
+                },
+            ),
+            # https://opinionstorage.blob.core.windows.net/opinions/2023-002.pdf
+            (
+                """eligible to receive funds from the Commission.
+
+Deputy Attorney General Ryan Owsley prepared this opinion, which I hereby approve.
+
+Sincerely,
+
+
+
+
+TIM GRIFFIN
+Attorney General
+""",
+                {
+                    "OpinionCluster": {
+                        "judges": "TIM GRIFFIN, Attorney General"
+                    }
+                },
+            ),
+            # https://opinionstorage.blob.core.windows.net/opinions/2024-001.pdf
+            (
+                """Assistant Attorney General William R. Olson prepared this opinion, which I hereby
+approve.
+
+Sincerely,
+
+
+
+TIM GRIFFIN
+Attorney General
+""",
+                {
+                    "OpinionCluster": {
+                        "judges": "TIM GRIFFIN, Attorney General"
+                    }
+                },
+            ),
+            # https://opinionstorage.blob.core.windows.net/opinions/2025-001.pdf
+            (
+                """Assistant Attorney General William R. Olson prepared this opinion, which I hereby approve.
+Sincerely,
+
+the 0X
+
+TIM GRIFFIN
+Attorney General
+""",
+                {
+                    "OpinionCluster": {
+                        "judges": "TIM GRIFFIN, Attorney General"
+                    }
+                },
+            ),
+            # https://opinionstorage.blob.core.windows.net/opinions/2026-118.pdf
+            (
+                """This opinion was prepared by Deputy Attorney General Kelly Summerside, with the concurrence
+of Chief Deputy Attorney General Zach Mayo.36
+
+Sincerely,
+     ~~£
+ZACH MAYO
+Chief Deputy Attorney General
+""",
+                {
+                    "OpinionCluster": {
+                        "judges": "ZACH MAYO, Chief Deputy Attorney General"
+                    }
+                },
             ),
         ],
         "juriscraper.opinions.united_states.attorney_general.mdag": [

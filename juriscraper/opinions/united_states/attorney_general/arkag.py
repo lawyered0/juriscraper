@@ -14,6 +14,77 @@ from juriscraper.lib.exceptions import ParsingException
 from juriscraper.OpinionSite import ExtractedMetaData
 from juriscraper.OpinionSiteLinear import OpinionSiteLinear
 
+# People who sign these opinions. The deputy named in "prepared this
+# opinion, which I hereby approve" drafted it; Columbia records the
+# signer as the judge. Each row is first name, surname, canonical form.
+_SIGNERS = (
+    ("DUSTIN", "MCDANIEL", "DUSTIN McDANIEL, Attorney General"),
+    ("LESLIE", "RUTLEDGE", "LESLIE RUTLEDGE, Attorney General"),
+    ("TIM", "GRIFFIN", "TIM GRIFFIN, Attorney General"),
+    # Signed when the Attorney General recused. Seen on 2013-078 and 2026-118.
+    (
+        "BRADFORD",
+        "PHELPS",
+        "BRADFORD J. PHELPS, Chief Deputy Attorney General",
+    ),
+    ("ZACH", "MAYO", "ZACH MAYO, Chief Deputy Attorney General"),
+)
+
+
+def _edit_distance(left: str, right: str) -> int:
+    """Levenshtein distance, capped so very different strings stay far."""
+    if abs(len(left) - len(right)) > 2:
+        return 3
+    previous = list(range(len(right) + 1))
+    for i, char in enumerate(left, 1):
+        current = [i]
+        for j, other in enumerate(right, 1):
+            current.append(
+                min(
+                    previous[j] + 1,
+                    current[-1] + 1,
+                    previous[j - 1] + (char != other),
+                )
+            )
+        previous = current
+    return previous[-1]
+
+
+def _signer_in(window: str) -> str:
+    """Return the canonical signer if the signature window names one."""
+    tokens = re.findall(r"[A-Za-z]+", window.upper())
+    best = ""
+    best_score = 99
+    for first, last, canonical in _SIGNERS:
+        last_hits = [
+            (i, _edit_distance(token, last))
+            for i, token in enumerate(tokens)
+            if _edit_distance(token, last) <= 2
+        ]
+        if not last_hits:
+            continue
+        first_hits = []
+        for i, token in enumerate(tokens):
+            distance = _edit_distance(token, first)
+            # "USTIN" / "STIN" are DUSTIN with the front letters dropped.
+            if len(token) >= 4 and token in first:
+                distance = min(distance, 1)
+            if distance <= 2:
+                first_hits.append((i, distance))
+        pairs = [
+            last_d + first_d
+            for i, last_d in last_hits
+            for j, first_d in first_hits
+            if i != j and (last_d <= 1 or first_d == 0)
+        ]
+        if not pairs:
+            continue
+        score = min(pairs)
+        if score < best_score:
+            best_score = score
+            best = canonical
+    return best
+
 
 class Site(OpinionSiteLinear):
     home_url = "https://prod.opinions-search.arkansasag.gov/"
@@ -27,21 +98,6 @@ class Site(OpinionSiteLinear):
         r'"(https://[^"]+\.meilisearch\.io)"\s*,\s*'
         r'(?:[A-Za-z_$][\w$]*\s*=\s*)?"([^"\s]{20,})"'
     )
-    # Name must start the line. A leading ^.*? also matched letterhead
-    # when the closing "Sincerely" was missing (89-178).
-    _signature_re = re.compile(
-        r"(?m)^[ \t]*"
-        r"([A-Z][A-Za-z'’.\-]*(?:[ \t]+[A-Z][A-Za-z'’.\-]*){1,4})"
-        r"[ \t]*\n(?:[ \t]*\n){0,2}[ \t]*"
-        r"((?i:(?:Chief Deputy )?Attorney General))"
-        r"(?:[ \t]*$|(?=[A-Z]))"
-    )
-    # fmt: off
-    _non_name_tokens = frozenset({
-        "ARKANSAS", "ATTORNEY", "DEPARTMENT", "GENERAL", "HONORABLE",
-        "OFFICE", "OF", "OPINION", "PAGE", "STATE", "THE",
-    })
-    # fmt: on
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -140,6 +196,8 @@ class Site(OpinionSiteLinear):
                     "docket": docket,
                     "name": f"Arkansas Attorney General Opinion No. {docket}",
                     "date": hit["Date_Published"].split("T", 1)[0],
+                    # Date_Published can differ from the date on the letter.
+                    "date_filed_is_approximate": True,
                     "url": hit["PDFUrl"].split("?")[0],
                     "summary": self._summary(hit),
                 }
@@ -147,35 +205,26 @@ class Site(OpinionSiteLinear):
 
     @override
     def extract_from_text(self, scraped_text: str) -> ExtractedMetaData:
-        # First name after the last Sincerely. Without that close, the
-        # only match is the letterhead (89-178).
+        """Signer after the first "Sincerely", if it matches a known name.
+
+        Later closings belong to opinions enclosed with the letter.
+        A signature image that OCR cannot read is left blank.
+        """
         text = (
             scraped_text.replace("\r\n", "\n")
             .replace("\r", "\n")
             .replace("\u00a0", " ")
         )
-        sincerely = text.lower().rfind("sincerely")
-        if sincerely == -1:
+        closes = list(re.finditer(r"(?m)^[ \t]*sincerely\b", text, re.I))
+        if not closes:
             return {}
-        matches = [
-            match
-            for match in self._signature_re.finditer(text)
-            if match.start() > sincerely
-            and self._is_signature_name(match.group(1))
-        ]
-        if not matches:
-            return {}
-
-        name = re.sub(r"\s+", " ", matches[0].group(1)).strip(" .,")
-        title = re.sub(r"\s+", " ", matches[0].group(2)).strip().casefold()
-        office = (
-            "Chief Deputy Attorney General"
-            if title == "chief deputy attorney general"
-            else "Attorney General"
+        tail = text[closes[0].end() : closes[0].end() + 400]
+        title = re.search(
+            r"(?im)^[ \t]*(?:chief deputy )?attorney general\b",
+            tail,
         )
-        return {"OpinionCluster": {"judges": f"{name}, {office}"}}
-
-    @classmethod
-    def _is_signature_name(cls, raw_name: str) -> bool:
-        tokens = {token.strip(".").upper() for token in raw_name.split()}
-        return bool(tokens) and not tokens & cls._non_name_tokens
+        window = tail[: title.start()] if title else tail[:120]
+        signer = _signer_in(window)
+        if not signer:
+            return {}
+        return {"OpinionCluster": {"judges": signer}}
